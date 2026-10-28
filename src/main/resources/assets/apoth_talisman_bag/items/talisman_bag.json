@@ -1,4 +1,5 @@
 {
+  "hand_animation_on_swap": false,
   "model": {
     "type": "minecraft:model",
     "model": "apoth_talisman_bag:item/talisman_bag"

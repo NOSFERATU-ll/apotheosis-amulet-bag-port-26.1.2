@@ -3,6 +3,7 @@ package nosferatu.apothbag.smoke;
 import dev.shadowsoffire.apotheosis.Apoth;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -87,6 +88,26 @@ public final class BagSmokeTests {
             allLoaded.removeItem(4, 1);
             check(new TalismanBagContainer(bag, registries).getItem(4).isEmpty(), "removed charm must stay removed");
 
+            ItemStack visualBag = new ItemStack(ApothTalismanBag.TALISMAN_BAG.get());
+            TalismanBagItem.setUnlockedSlots(visualBag, 5);
+            var visualContainer = new TalismanBagContainer(visualBag, registries);
+            checkModel(visualBag, 0);
+            for (int count = 1; count <= 5; count++) {
+                visualContainer.setItem(count - 1, charm.copy());
+                checkModel(visualBag, Math.min(3, count));
+            }
+            ItemStack visualRestored = ItemStack.CODEC.parse(ops, ItemStack.CODEC.encodeStart(ops, visualBag).getOrThrow()).getOrThrow();
+            checkModel(visualRestored, 3);
+            // Bags saved by the previous jar acquire their model on the next inventory tick.
+            visualBag.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath(ApothTalismanBag.MODID, "talisman_bag"));
+            visualBag.getItem().inventoryTick(visualBag, level, player, null);
+            checkModel(visualBag, 3);
+            for (int count = 4; count >= 0; count--) {
+                visualContainer.removeItem(count, 1);
+                checkModel(visualBag, Math.min(3, count));
+            }
+            System.out.println("POUCH MODEL CHECK PASSED: 0,1,2,3,3,3 and back; persistence and migration");
+
             if (ModList.get().isLoaded("curios")) CuriosSmokeTest.check(player, bag);
 
             Files.createDirectories(result.getParent());
@@ -98,5 +119,11 @@ public final class BagSmokeTests {
         } finally {
             server.halt(false);
         }
+    }
+
+    private static void checkModel(ItemStack bag, int visible) {
+        Identifier expected = Identifier.fromNamespaceAndPath(ApothTalismanBag.MODID,
+                visible == 0 ? "talisman_bag" : "talisman_bag_" + visible);
+        check(expected.equals(bag.get(DataComponents.ITEM_MODEL)), "wrong pouch model for " + visible + " visible charms");
     }
 }

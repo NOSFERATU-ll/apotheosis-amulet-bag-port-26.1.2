@@ -10,6 +10,10 @@ import dev.shadowsoffire.apotheosis.Apoth;
 import dev.shadowsoffire.apotheosis.item.PotionCharmItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -33,6 +37,20 @@ public class TalismanBagItem extends Item {
 
     public TalismanBagItem(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, EquipmentSlot slot) {
+        updateAppearance(stack);
+    }
+
+    public static void updateAppearance(ItemStack bag) {
+        int count = Math.min(3, getBagData(bag).getListOrEmpty(TAG_ITEMS).size());
+        Identifier model = Identifier.fromNamespaceAndPath(ApothTalismanBag.MODID,
+                count == 0 ? "talisman_bag" : "talisman_bag_" + count);
+        if (!model.equals(bag.get(DataComponents.ITEM_MODEL))) {
+            bag.set(DataComponents.ITEM_MODEL, model);
+        }
     }
 
     @Override
@@ -162,6 +180,7 @@ public class TalismanBagItem extends Item {
         CompoundTag tag = getBagData(bag);
         tag.put(TAG_ITEMS, list);
         setBagData(bag, tag);
+        updateAppearance(bag);
     }
 
     @Override

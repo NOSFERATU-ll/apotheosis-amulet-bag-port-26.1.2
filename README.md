@@ -4,6 +4,7 @@ A bag for Apotheosis potion charms on Minecraft **26.1.2 NeoForge**.
 
 ## Features
 
+- The bag appearance follows its contents: empty, one, two, or three visible charms. Three to five stored charms use the full appearance.
 - Five charm slots, unlocked progressively for **100 / 200 / 300 / 400 / 500 experience levels**.
 - Stored charms activate automatically, apply their effects and consume durability.
 - Works in the main inventory, offhand and Curios slots.
