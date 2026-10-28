@@ -1,0 +1,86 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'idea'
+}
+
+version = mod_version
+group = mod_group_id
+
+base { archivesName = mod_id }
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.neoforged.net/releases' }
+    maven { url = 'https://maven.shadowsoffire.dev/releases' }
+    maven { url = 'https://maven.blamejared.com' }
+    maven { url = 'https://maven.theillusivec4.top' }
+}
+
+neoForge {
+    version = project.neo_version
+
+    runs {
+        client { client() }
+        server { server(); programArgument '--nogui' }
+        configureEach { logLevel = org.slf4j.event.Level.INFO }
+    }
+
+    mods {
+        "${mod_id}" { sourceSet(sourceSets.main) }
+    }
+}
+
+dependencies {
+    implementation 'dev.shadowsoffire:Apotheosis:26.1.2-9.1.0'
+    implementation 'dev.shadowsoffire:Placebo:26.1.2-10.0.2'
+    runtimeOnly 'dev.shadowsoffire:ApothicAttributes:26.1.2-3.0.1'
+    runtimeOnly 'vazkii.patchouli:patchouli-neoforge:26.1-94'
+    if (!project.hasProperty('withoutCurios')) {
+        runtimeOnly 'top.theillusivec4.curios:curios-neoforge:15.0.0+26.1.2'
+    }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+java { withSourcesJar() }
+
+sourceSets {
+    smokeTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+configurations {
+    smokeTestImplementation.extendsFrom implementation
+    smokeTestRuntimeOnly.extendsFrom runtimeOnly
+}
+if (project.hasProperty('withoutCurios')) {
+    configurations.configureEach {
+        if (name.endsWith('RuntimeClasspath')) {
+            exclude group: 'top.theillusivec4.curios', module: 'curios-neoforge'
+        }
+    }
+}
+dependencies {
+    smokeTestCompileOnly 'top.theillusivec4.curios:curios-neoforge:15.0.0+26.1.2'
+}
+neoForge {
+    addModdingDependenciesTo(sourceSets.smokeTest)
+    mods {
+        apoth_bag_smoke_tests { sourceSet sourceSets.smokeTest }
+    }
+    runs {
+        client { loadedMods = [mods.apoth_talisman_bag] }
+        server { loadedMods = [mods.apoth_talisman_bag] }
+        smokeServer {
+            server()
+            sourceSet = sourceSets.smokeTest
+            gameDirectory = file(project.hasProperty('withoutCurios') ? 'run/smoke-no-curios' : 'run/smoke-curios')
+            programArguments.addAll '--nogui', '--port', '0'
+            systemProperty 'apothbag.smokeResult', file(project.hasProperty('withoutCurios') ? 'build/smoke-no-curios.txt' : 'build/smoke-curios.txt').absolutePath
+        }
+    }
+}

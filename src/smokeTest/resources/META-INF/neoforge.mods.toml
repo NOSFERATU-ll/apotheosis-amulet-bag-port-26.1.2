@@ -1,0 +1,8 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="apoth_bag_smoke_tests"
+version="1.0"
+displayName="Amulet Bag integration checks (development only)"
